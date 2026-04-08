@@ -1,21 +1,34 @@
 name: .NET CI Pipeline
+
 on:
-  push:
-    branches:
-      - main
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ] # Highly recommended to catch bugs before they merge
+
+env:
+  DOTNET_VERSION: '7.0' # Centralized version control
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0'
-      - name: Restore dependencies
-        run: dotnet restore
-      - name: Build the application
-        run: dotnet build --configuration Release --no-restore
-      - name: Run tests
-        run: dotnet test --no-restore --verbosity normal
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true # Built-in caching for NuGet packages
+          cache-dependency-path: '**/packages.lock.json' # Optional: for precise caching
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build the application
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
